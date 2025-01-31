@@ -18,6 +18,12 @@ const userSchema = new Schema({
     type: String,
     required: true,
   },
+  phoneNumber: {
+    type: String,
+  },
+  address: {
+    type: String,
+  },
 });
 
 // static signup method
@@ -79,6 +85,40 @@ userSchema.statics.getUserByEmail = async function (email) {
 
   const user = await this.findOne({ email });
   if (!user) throw new Error("No user with this email");
+
+  return user;
+};
+
+userSchema.statics.changePassword = async function (
+  userId,
+  currentPassword,
+  newPassword
+) {
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    throw new Error("invalid user ID");
+  }
+
+  const user = await this.findById(userId);
+
+  if (!user) {
+    throw new Error("User with this ID does not exist");
+  }
+
+  const match = await bcrypt.compare(currentPassword, user.password);
+
+  if (!match) {
+    throw new Error("Current password is not correct");
+  }
+
+  if (!validator.isStrongPassword(newPassword)) {
+    throw new Error("New password is not strong enough");
+  }
+
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+  user.password = hashedPassword;
+  user.save();
 
   return user;
 };

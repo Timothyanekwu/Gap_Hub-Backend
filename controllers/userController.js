@@ -4,7 +4,7 @@ const redisClient = require("../lib/redis");
 const mailer = require("../lib/mailer");
 
 const createToken = (_id) => {
-  return jwt.sign({ _id }, process.env.SECRET, { expiresIn: "2d" });
+  return jwt.sign({ _id }, process.env.SECRET, { expiresIn: "13h" });
 };
 
 // login user
@@ -14,6 +14,14 @@ const loginUser = async (req, res) => {
   try {
     const user = await User.login(email, password);
     const token = createToken(user._id);
+
+    res.cookie("user", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 12 * 60 * 60 * 1000, // 12 hours
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+    });
+
     res.status(200).json({ email, token });
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -26,8 +34,17 @@ const signupUser = async (req, res) => {
 
   try {
     const user = await User.signup(username, email, password);
+
     const token = createToken(user._id);
-    res.status(200).json({ email, token });
+
+    res.cookie("user", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 12 * 60 * 60 * 1000, // 12 hours
+      sameSite: "Lax",
+    });
+
+    res.status(200).json({ email });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }

@@ -3,13 +3,18 @@ const User = require("../SchemaModel/userSchema");
 
 const requireAuth = async (req, res, next) => {
   // verify authentication
-  const { authorization } = req.headers;
 
-  if (!authorization) {
-    return res.status(401).json({ error: "Authorization token required" });
+  // const { authorization } = req.headers;
+  const token = req.cookies?.user;
+
+  // if (!authorization) {
+  //   return res.status(401).json({ error: "Authorization token required" });
+  // }
+  if (!token) {
+    return res.status(401).json({ error: "Authentication token required" });
   }
 
-  const token = authorization.split(" ")[1];
+  // const token = authorization.split(" ")[1];
 
   try {
     const { _id } = jwt.verify(token, process.env.SECRET);
