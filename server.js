@@ -15,14 +15,27 @@ app.use(express.json());
 //cookie-parser
 app.use(cookieParser());
 
-app.use(
-  cors({
-    origin: "http://localhost:3000",
-    // methods: ["GET", "POST", "PUT", "DELETE"], // Specify allowed methods
-    // allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
-  })
-);
+const corsOptions = {
+  origin: function (origin, callback) {
+    const allowedOrigins = [
+      "http://localhost:3000",
+      "https://gaphubsolutions.netlify.app",
+    ];
+
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, origin); // Dynamically allow the requesting origin
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true, // Allows cookies, authentication headers, etc.
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  optionsSuccessStatus: 200,
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 app.use((req, res, next) => {
   console.log(`${req.path} :: ${req.method}`);
